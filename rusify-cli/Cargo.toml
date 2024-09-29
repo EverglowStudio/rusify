@@ -1,0 +1,24 @@
+[package]
+name = "rusify-cli"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+cargo_metadata = "0.15"
+askama = "0.12"
+convert_case = "0.6"
+glob = "0.3"
+anyhow = "1"
+lazy_static = "1.5"
+itertools = "0.13"
+
+# console
+indicatif = "0.17"
+camino = "1"
+clap = { version = "4", features = ["derive"] }
+console = "0.15"
+dialoguer = { version = "0.11", default-features = false }
+execute = "0.2"
+
+# ffi
+uniffi_bindgen = "0.28"

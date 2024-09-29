@@ -1,0 +1,9 @@
+[workspace]
+members = [
+    "rusify",
+    "rusify-macro",
+    "rusify-cli"
+]
+resolver = "2"
+
+[workspace.dependencies]
