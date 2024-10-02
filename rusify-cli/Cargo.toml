@@ -3,6 +3,10 @@ name = "rusify-cli"
 version = "0.1.0"
 edition = "2021"
 
+[[bin]]
+name = "rusify"
+path = "src/main.rs"
+
 [dependencies]
 cargo_metadata = "0.15"
 askama = "0.12"
@@ -22,3 +26,4 @@ execute = "0.2"
 
 # ffi
 uniffi_bindgen = "0.28"
+ohrs = "0.9"

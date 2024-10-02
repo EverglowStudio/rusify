@@ -4,4 +4,23 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-uniffi = "0.28"
+serde = { version = "1", features = ["derive"] }
+uniffi = { version = "0.28", optional = true, features = ["scaffolding-ffi-buffer-fns", "tokio"] }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = "0.2"
+tsify-next = { version =  "0.5", features = ["js"] }
+
+[target.'cfg(target_env = "ohos")'.dependencies]
+napi-ohos = { version = "1.0.0-beta.8" }
+napi-derive-ohos = { version = "1.0.0-beta.8" }
+
+[target.'cfg(target_env = "ohos")'.build-dependencies]
+napi-build-ohos = "1.0.0-beta.8"
+
+[features]
+default = []
+uniffi = ["dep:uniffi"]
+
+[profile.release]
+opt-level = "s"
