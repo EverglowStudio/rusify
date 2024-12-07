@@ -10,7 +10,6 @@ pub fn rusify_enum(_attr: TokenStream, item: TokenStream) -> TokenStream {
         #[cfg_attr(feature = "uniffi", derive(uniffi::Enum))]
         #[cfg_attr(feature = "wasm32", derive(tsify_next::Tsify), tsify(into_wasm_abi, from_wasm_abi))]
         #[cfg_attr(feature = "ohos", napi_derive_ohos::napi)]
-        #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
         #input
     };
     TokenStream::from(expanded)
@@ -23,7 +22,6 @@ pub fn rusify_struct(_attr: TokenStream, item: TokenStream) -> TokenStream {
         #[cfg_attr(feature = "uniffi", derive(uniffi::Record))]
         #[cfg_attr(feature = "wasm32", derive(tsify_next::Tsify), tsify(into_wasm_abi, from_wasm_abi))]
         #[cfg_attr(feature = "ohos", napi_derive_ohos::napi(object))]
-        #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
         #input
     };
     TokenStream::from(expanded)
