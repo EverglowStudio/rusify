@@ -8,15 +8,10 @@ use crate::common::{
     metadata::{metadata, MetadataExt},
     models::{Config, FeatureOptions, LibType, Mode},
 };
-use crate::console::{
-    messages::*,
-    step::run_step_with_commands,
-    theme::prompt_theme,
-};
+use crate::console::{messages::*, step::run_step_with_commands, theme::prompt_theme};
 use crate::ffi::swift::generate_swift_bindings_with_output;
 use crate::swiftpackage::{create_package_with_output, recreate_output_dir};
 use crate::xcframework::create_xcframework_with_output;
-
 
 #[allow(clippy::too_many_arguments)]
 pub fn build_swift_package(
@@ -50,7 +45,9 @@ pub fn build_swift_package(
             features,
         );
     } else if package_name.is_some() {
-        return Err(anyhow!("Package name can only be specified when building a single crate!"));
+        return Err(anyhow!(
+            "Package name can only be specified when building a single crate!"
+        ));
     }
 
     crates
@@ -126,7 +123,9 @@ fn build_swift_package_for_crate(
 
     if let Some(build_target) = build_target {
         targets.retain_mut(|platform_target| match platform_target {
-            AppleTarget { architectures, .. } => architectures.iter().any(|arch| *arch == build_target),
+            AppleTarget { architectures, .. } => {
+                architectures.iter().any(|arch| *arch == build_target)
+            }
         });
         if targets.is_empty() {
             return Err(anyhow!("No matching build target for {}", build_target));

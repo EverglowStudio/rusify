@@ -1,9 +1,9 @@
-use std::ops::Deref;
-use std::fs::{create_dir, remove_dir_all};
-use std::path::Path;
-use std::io;
-use camino::{Utf8Path, Utf8PathBuf};
 use crate::Result;
+use camino::{Utf8Path, Utf8PathBuf};
+use std::fs::{create_dir, remove_dir_all};
+use std::io;
+use std::ops::Deref;
+use std::path::Path;
 
 pub(crate) fn recreate_dir<P>(dir: P) -> Result<()>
 where

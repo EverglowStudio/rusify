@@ -1,7 +1,7 @@
-use std::process::Command;
-use execute::command;
-use crate::common::models::{LibType, Mode, FeatureOptions};
 use crate::common::metadata::{metadata, MetadataExt};
+use crate::common::models::{FeatureOptions, LibType, Mode};
+use execute::command;
+use std::process::Command;
 
 #[derive(Debug, Clone)]
 pub struct AppleTarget {
@@ -30,12 +30,10 @@ pub struct ApplePlatformTarget {
 impl ApplePlatform {
     pub(crate) fn into_apple_platform_target(&self) -> Vec<ApplePlatformTarget> {
         match self {
-            ApplePlatform::MacOS => vec![
-                ApplePlatformTarget {
-                    platform: *self,
-                    is_simulator: false,
-                },
-            ],
+            ApplePlatform::MacOS => vec![ApplePlatformTarget {
+                platform: *self,
+                is_simulator: false,
+            }],
             _ => vec![
                 ApplePlatformTarget {
                     platform: *self,
@@ -94,7 +92,8 @@ impl AppleTarget {
 
         let target = metadata().target_dir();
         let target_name = library_file_name(lib_name, lib_type);
-        let component_paths: Vec<_> = self.architectures
+        let component_paths: Vec<_> = self
+            .architectures
             .iter()
             .map(|arch| format!("{target}/{arch}/{mode}/{target_name}"))
             .collect();
@@ -271,7 +270,7 @@ impl ApplePlatformTarget {
                 architectures: vec![
                     "aarch64-apple-watchos",
                     "arm64_32-apple-watchos",
-                    "armv7k-apple-watchos"
+                    "armv7k-apple-watchos",
                 ],
                 display_name: "watchOS",
                 platform: *self,

@@ -1,11 +1,11 @@
-use std::ops::Not;
-use askama::Template;
-use glob::glob;
-use std::fs::{copy, create_dir_all, write};
-use crate::{Context, Result, path::recreate_dir, templating};
 use crate::common::models::Config;
 use crate::console::step::run_step;
 use crate::console::{MainSpinner, Ticking};
+use crate::{path::recreate_dir, templating, Context, Result};
+use askama::Template;
+use glob::glob;
+use std::fs::{copy, create_dir_all, write};
+use std::ops::Not;
 
 pub(crate) fn create_package_with_output(
     package_name: &str,
@@ -45,8 +45,11 @@ pub fn create_swiftpackage(
 
     write(
         format!("{}/Package.swift", package_name),
-        package_manifest.render().context("Failed to render Package.swift template")?
-    ).context("Could not write Package.swift")?;
+        package_manifest
+            .render()
+            .context("Failed to render Package.swift template")?,
+    )
+    .context("Could not write Package.swift")?;
 
     create_dir_all(format!("{}/Sources/{}", package_name, package_name))
         .context("Could not create module sources directory")?;
@@ -54,8 +57,7 @@ pub fn create_swiftpackage(
     for swift_file in glob("./generated/sources/*.swift")
         .context("Could not find generated swift source files")?
     {
-        let swift_file = swift_file
-            .context("Could not access generated swift source file")?;
+        let swift_file = swift_file.context("Could not access generated swift source file")?;
         let file_name = swift_file
             .file_name()
             .context("Could not get file name")?

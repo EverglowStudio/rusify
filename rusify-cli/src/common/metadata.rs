@@ -1,11 +1,10 @@
 use std::borrow::Cow;
 
+use crate::path::PathExt;
 use camino::Utf8Path;
 use cargo_metadata::{Metadata, MetadataCommand, Package};
 use itertools::Itertools;
 use lazy_static::lazy_static;
-
-use crate::path::PathExt;
 
 pub(crate) fn metadata() -> &'static Metadata {
     lazy_static! {

@@ -7,6 +7,9 @@ mod apple {
     pub mod swiftpackage;
     pub mod xcframework;
 }
+mod ohos {
+    pub mod ohos_arch;
+}
 pub(crate) mod console {
     pub mod step;
     pub mod spinners;
@@ -35,5 +38,6 @@ pub use commands::*;
 pub use apple::*;
 pub use common::*;
 pub use console::*;
+pub use ohos::*;
 
 pub use anyhow::{Context, Result};

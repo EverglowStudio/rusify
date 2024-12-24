@@ -1,13 +1,11 @@
 use std::ops::Not;
 use std::process::{Command, Stdio};
 
-use indicatif::MultiProgress;
-use crate::Result;
 use crate::common::models::Config;
+use crate::Result;
+use indicatif::MultiProgress;
 
-use super::{
-    CommandInfo, CommandSpinner, MainSpinner, OptionalMultiProgress, Ticking,
-};
+use super::{CommandInfo, CommandSpinner, MainSpinner, OptionalMultiProgress, Ticking};
 
 pub fn run_step<T, E, S>(config: &Config, title: S, execute: E) -> Result<T>
 where
@@ -60,7 +58,10 @@ where
         if !output.status.success() {
             step.fail();
             spinner.fail();
-            return Err(anyhow::anyhow!("{}", String::from_utf8_lossy(&output.stderr)));
+            return Err(anyhow::anyhow!(
+                "{}",
+                String::from_utf8_lossy(&output.stderr)
+            ));
         }
 
         step.finish();

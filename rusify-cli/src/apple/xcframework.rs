@@ -1,9 +1,9 @@
-use std::path::{PathBuf, Path};
-use std::process::{Command, Stdio};
 use anyhow::{Context, Result};
+use std::path::{Path, PathBuf};
+use std::process::{Command, Stdio};
 
-use crate::common::models::{LibType, Mode, Config};
 use crate::apple::apple_target::AppleTarget;
+use crate::common::models::{Config, LibType, Mode};
 use crate::console::step::run_step;
 
 pub(crate) fn create_xcframework_with_output(
@@ -31,7 +31,12 @@ pub(crate) fn create_xcframework_with_output(
             lib_type,
         )
     })
-    .map_err(|e| anyhow::anyhow!("Failed to create XCFramework due to the following error: \n {}", e))
+    .map_err(|e| {
+        anyhow::anyhow!(
+            "Failed to create XCFramework due to the following error: \n {}",
+            e
+        )
+    })
 }
 
 pub fn create_xcframework(
@@ -78,7 +83,10 @@ pub fn create_xcframework(
         .context("Failed to execute xcodebuild command")?;
 
     if !output.status.success() {
-        anyhow::bail!("xcodebuild command failed: {}", String::from_utf8_lossy(&output.stderr))
+        anyhow::bail!(
+            "xcodebuild command failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        )
     } else {
         Ok(())
     }
