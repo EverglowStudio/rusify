@@ -25,5 +25,5 @@ dialoguer = { version = "0.11", default-features = false }
 execute = "0.2"
 
 # ffi
-uniffi_bindgen = "0.28"
+uniffi_bindgen = "0.29"
 ohrs = "0.9"

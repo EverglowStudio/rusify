@@ -242,14 +242,14 @@ impl ApplePlatformTarget {
                 platform: *self,
             },
             (IOS, true) => AppleTarget {
-                universal_name: Some("universal-ios"),
-                architectures: vec!["x86_64-apple-ios", "aarch64-apple-ios-sim"],
+                universal_name: None,
+                architectures: vec!["aarch64-apple-ios-sim"],
                 display_name: "iOS Simulator",
                 platform: *self,
             },
             (MacOS, _) => AppleTarget {
-                universal_name: Some("universal-macos"),
-                architectures: vec!["x86_64-apple-darwin", "aarch64-apple-darwin"],
+                universal_name: None,
+                architectures: vec!["aarch64-apple-darwin"],
                 display_name: "macOS",
                 platform: *self,
             },
@@ -261,7 +261,7 @@ impl ApplePlatformTarget {
             },
             (TvOS, true) => AppleTarget {
                 universal_name: Some("universal-tvos-simulator"),
-                architectures: vec!["aarch64-apple-tvos-sim", "x86_64-apple-tvos"],
+                architectures: vec!["aarch64-apple-tvos-sim"],
                 display_name: "tvOS Simulator",
                 platform: *self,
             },
