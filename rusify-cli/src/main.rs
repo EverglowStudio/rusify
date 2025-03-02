@@ -1,6 +1,7 @@
 use clap::{Parser, Subcommand};
+use rusify_cli::android::android_target::AndroidArch;
 use std::process::ExitCode;
-use rusify_cli::apple_target::ApplePlatform;
+use rusify_cli::apple::apple_target::ApplePlatform;
 use rusify_cli::models::{LibType, Mode, FeatureOptions, Config};
 
 #[derive(Parser)]
@@ -63,6 +64,49 @@ enum Commands {
         /// if the corresponding value was not set as an argument beforehand.
         accept_all: bool,
     },
+    BuildAndroid {
+        #[arg(short, long, trailing_var_arg = true, num_args = 1..=4, ignore_case = true)]
+        archs: Option<Vec<AndroidArch>>,
+
+        #[arg(long)]
+        /// Build package for the specified target triplet only.
+        target: Option<String>,
+
+        #[arg(long, default_value_t = 21)]
+        /// Android API level to target (minimum 21 for 64-bit support)
+        api_level: u32,
+
+        #[arg(short = 'n', long = "name")]
+        package_name: Option<String>,
+
+        #[arg(long, default_value = "RustLibrary")]
+        aar_name: String,
+
+        #[arg(short, long)]
+        /// Build package optimized for release (default: debug)
+        release: bool,
+
+        #[arg(long, ignore_case = true, default_value_t = LibType::Dynamic)]
+        /// Choose how the library should be built. For Android, dynamic (shared) libraries are recommended.
+        lib_type: LibType,
+
+        #[arg(short = 'F', long, trailing_var_arg = true)]
+        features: Option<Vec<String>>,
+
+        #[arg(long)]
+        all_features: bool,
+
+        #[arg(long)]
+        no_default_features: bool,
+
+        #[arg(short, long, global = true)]
+        /// Silence all output except errors and interactive prompts
+        silent: bool,
+    
+        #[arg(short = 'y', long, global = true)]
+        /// Accept all default selections from all interactive prompts.
+        accept_all: bool,
+    },
 }
 
 fn main() -> ExitCode {
@@ -87,12 +131,42 @@ fn main() -> ExitCode {
             silent,
             accept_all,
         } => {
-            rusify_cli::package::build_swift_package(
+            rusify_cli::apple::package::build_swift_package(
                 platforms,
                 target.as_deref(),
                 package_name,
                 xcframework_name,
                 suppress_warnings,
+                Config { silent, accept_all },
+                if release { Mode::Release } else { Mode::Debug },
+                lib_type,
+                FeatureOptions {
+                    features,
+                    all_features,
+                    no_default_features,
+                },
+            )
+        }
+        Commands::BuildAndroid {
+            archs,
+            target,
+            api_level,
+            package_name,
+            aar_name,
+            release,
+            lib_type,
+            features,
+            all_features,
+            no_default_features,
+            silent,
+            accept_all,
+        } => {
+            rusify_cli::android::package::build_android_package(
+                archs,
+                target.as_deref(),
+                api_level,
+                package_name,
+                aar_name,
                 Config { silent, accept_all },
                 if release { Mode::Release } else { Mode::Debug },
                 lib_type,

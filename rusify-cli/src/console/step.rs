@@ -56,6 +56,12 @@ where
             .unwrap_or_else(|_| panic!("Failed to execute command: {}", command.info()));
 
         if !output.status.success() {
+            let stderr_output = String::from_utf8_lossy(&output.stderr);
+            // Print full output when error occurs
+            if !stderr_output.is_empty() {
+                eprintln!("\n==== STDERR OUTPUT ====\n{}", stderr_output);
+            }
+
             step.fail();
             spinner.fail();
             return Err(anyhow::anyhow!(

@@ -1,13 +1,18 @@
 mod commands {
     pub mod init;
 }
-mod apple {
+pub mod apple {
     pub mod apple_target;
     pub mod package;
     pub mod swiftpackage;
     pub mod xcframework;
 }
-mod ohos {
+pub mod android {
+    pub mod android_target;
+    pub mod package;
+    pub mod aar;
+}
+pub mod ohos {
     pub mod ohos_arch;
 }
 pub(crate) mod console {
@@ -32,12 +37,11 @@ mod common {
 }
 mod ffi {
     pub mod swift;
+    pub mod kotlin;
 }
 
 pub use commands::*;
-pub use apple::*;
 pub use common::*;
 pub use console::*;
-pub use ohos::*;
 
 pub use anyhow::{Context, Result};

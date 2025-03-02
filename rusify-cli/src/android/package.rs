@@ -1,44 +1,42 @@
 use anyhow::{anyhow, Context, Result};
 use cargo_metadata::Package;
-use convert_case::{Case, Casing};
+// use convert_case::{Case, Casing};
 use dialoguer::{Input, MultiSelect};
 
-use crate::apple::apple_target::{ApplePlatform, AppleTarget};
+use crate::android::android_target::{AndroidArch, AndroidTarget};
 use crate::common::{
     metadata::{metadata, MetadataExt},
     models::{Config, FeatureOptions, LibType, Mode},
 };
 use crate::console::{messages::*, step::run_step_with_commands, theme::prompt_theme};
-use crate::ffi::swift::generate_swift_bindings_with_output;
-use crate::apple::swiftpackage::{create_package_with_output, recreate_output_dir};
-use crate::apple::xcframework::create_xcframework_with_output;
+use crate::ffi::kotlin::generate_kotlin_bindings_with_output;
+use crate::android::aar::create_aar_with_output;
 
 #[allow(clippy::too_many_arguments)]
-pub fn build_swift_package(
-    platforms: Option<Vec<ApplePlatform>>,
+pub fn build_android_package(
+    architectures: Option<Vec<AndroidArch>>,
     build_target: Option<&str>,
+    api_level: u32,
     package_name: Option<String>,
-    xcframework_name: String,
-    disable_warnings: bool,
+    aar_name: String,
     config: Config,
     mode: Mode,
     lib_type: LibType,
     features: FeatureOptions,
 ) -> Result<()> {
-    // TODO: Allow path as optional argument to take other directories than current directory
-    // let crates = metadata().uniffi_crates();
+    // Get the current crate
     let crates = [metadata()
         .current_crate()
         .context("Current directory is not part of a crate!")?];
 
     if crates.len() == 1 {
-        return build_swift_package_for_crate(
+        return build_android_package_for_crate(
             crates[0],
-            platforms.clone(),
+            architectures.clone(),
             build_target,
+            api_level,
             package_name,
-            xcframework_name,
-            disable_warnings,
+            aar_name,
             &config,
             mode,
             lib_type,
@@ -54,13 +52,13 @@ pub fn build_swift_package(
         .iter()
         .map(|current_crate| {
             info!(&config, "Packaging crate {}", current_crate.name);
-            build_swift_package_for_crate(
+            build_android_package_for_crate(
                 current_crate,
-                platforms.clone(),
+                architectures.clone(),
                 build_target,
+                api_level,
                 None,
-                xcframework_name.clone(),
-                disable_warnings,
+                aar_name.clone(),
                 &config,
                 mode,
                 lib_type.clone(),
@@ -80,18 +78,25 @@ pub fn build_swift_package(
 }
 
 #[allow(clippy::too_many_arguments)]
-fn build_swift_package_for_crate(
+fn build_android_package_for_crate(
     current_crate: &Package,
-    platforms: Option<Vec<ApplePlatform>>,
+    architectures: Option<Vec<AndroidArch>>,
     build_target: Option<&str>,
+    api_level: u32,
     package_name: Option<String>,
-    xcframework_name: String,
-    disable_warnings: bool,
+    aar_name: String,
     config: &Config,
     mode: Mode,
     lib_type: LibType,
     features: FeatureOptions,
 ) -> Result<()> {
+    // Verify that ANDROID_NDK_HOME is properly set
+    if let Err(e) = std::env::var("ANDROID_NDK_HOME") {
+        return Err(anyhow!(
+            "ANDROID_NDK_HOME environment variable is not set. Please install Android NDK and set this variable: {}",
+            e
+        ));
+    }
     let lib = current_crate
         .targets
         .iter()
@@ -99,31 +104,31 @@ fn build_swift_package_for_crate(
         .context("No library tag defined in Cargo.toml!")?;
 
     let crate_name = current_crate.name.to_lowercase();
-    let package_name =
-        package_name.unwrap_or_else(|| prompt_package_name(&crate_name, config.accept_all));
+    let default_package_name = format!("com.{}.{}", crate_name, crate_name);
+    let package_name = package_name.unwrap_or_else(|| 
+        prompt_package_name(&default_package_name, config.accept_all));
 
-    let platforms = platforms.unwrap_or_else(|| prompt_platforms(config.accept_all));
+    let architectures = architectures.unwrap_or_else(|| prompt_architectures(config.accept_all));
 
-    if platforms.is_empty() {
-        return Err(anyhow!("At least 1 platform needs to be selected!"));
+    if architectures.is_empty() {
+        return Err(anyhow!("At least 1 architecture needs to be selected!"));
     }
 
-    if lib_type == LibType::Dynamic {
+    if lib_type == LibType::Static {
         warning!(
             &config,
-            "Building as dynamic library is discouraged. It might prevent apps that use this library from publishing to the App Store."
+            "Building as static library for Android is unusual. Dynamic libraries (.so) are typically used."
         );
     }
 
-    let mut targets: Vec<_> = platforms
+    let mut targets: Vec<_> = architectures
         .into_iter()
-        .flat_map(|p| p.into_apple_platform_target())
-        .map(|p| p.target())
+        .map(|a| a.target(api_level))
         .collect();
 
     if let Some(build_target) = build_target {
-        targets.retain_mut(|platform_target| match platform_target {
-            AppleTarget { architectures, .. } => {
+        targets.retain_mut(|android_target| match android_target {
+            AndroidTarget { architectures, .. } => {
                 architectures.iter().any(|arch| *arch == build_target)
             }
         });
@@ -137,68 +142,67 @@ fn build_swift_package_for_crate(
         build_with_output(target, &crate_name, mode, lib_type, config, &features)?;
     }
 
-    generate_swift_bindings_with_output(&targets, &crate_name, mode, lib_type, config)?;
+    generate_kotlin_bindings_with_output(&targets, &crate_name, mode, lib_type, config, &package_name)?;
 
-    recreate_output_dir(&package_name).context("Could not create package output directory!")?;
-    create_xcframework_with_output(
+    create_aar_with_output(
         &targets,
         &crate_name,
         &package_name,
-        &xcframework_name,
+        &aar_name,
         mode,
         lib_type,
         config,
     )?;
-    create_package_with_output(&package_name, &xcframework_name, disable_warnings, config)?;
 
     Ok(())
 }
 
-fn prompt_platforms(accept_all: bool) -> Vec<ApplePlatform> {
-    let platforms = ApplePlatform::all();
-    let items = platforms.map(|p| p.display_name());
+fn prompt_architectures(accept_all: bool) -> Vec<AndroidArch> {
+    let architectures = AndroidArch::all();
+    let items = architectures.map(|a| a.display_name());
 
     if accept_all {
-        return platforms.to_vec();
+        return architectures.to_vec();
     }
 
     let theme = prompt_theme();
     let selector = MultiSelect::with_theme(&theme)
         .items(&items)
-        .with_prompt("Select Target Platforms")
-        // TODO: Move this to separate class and disable reporting to change style on success
-        // .report(false)
-        .defaults(&platforms.map(|p| !p.is_experimental()));
+        .with_prompt("Select Target Architectures")
+        .defaults(&[true, true, false, true]); // Default to ARM64, ARMv7, and x86_64
 
     let chosen: Vec<usize> = selector.interact().unwrap();
 
-    chosen.into_iter().map(|i| platforms[i]).collect()
+    chosen.into_iter().map(|i| architectures[i]).collect()
 }
 
-fn prompt_package_name(crate_name: &str, accept_all: bool) -> String {
-    let default = crate_name.to_case(Case::UpperCamel);
-
+fn prompt_package_name(default: &str, accept_all: bool) -> String {
     if accept_all {
-        return default;
+        return default.to_string();
     }
 
     let theme = prompt_theme();
     Input::with_theme(&theme)
-        .with_prompt("Swift Package Name")
-        .default(default)
+        .with_prompt("Kotlin Package Name")
+        .default(default.to_string())
         .interact_text()
         .unwrap()
 }
 
 fn build_with_output(
-    target: &AppleTarget,
-    lib_name: &str,
+    target: &AndroidTarget,
+    _lib_name: &str,
     mode: Mode,
-    lib_type: LibType,
+    _lib_type: LibType,
     config: &Config,
     features: &FeatureOptions,
 ) -> Result<()> {
-    let mut commands = target.commands(lib_name, mode, lib_type, features);
+    // First set up the environment with Rust file operations
+    target.setup_environment()
+        .context(format!("Failed to set up build environment for {}", target.display_name()))?;
+    
+    // Then run cargo build commands
+    let mut commands = target.cargo_build_commands(mode, features);
     for command in &mut commands {
         command.env("CARGO_TERM_COLOR", "always");
     }

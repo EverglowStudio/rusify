@@ -15,6 +15,7 @@ glob = "0.3"
 anyhow = "1"
 lazy_static = "1.5"
 itertools = "0.13"
+zip = "0.6"
 
 # console
 indicatif = "0.17"

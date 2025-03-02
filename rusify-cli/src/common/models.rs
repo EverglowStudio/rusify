@@ -71,3 +71,12 @@ impl std::fmt::Display for LibType {
         }
     }
 }
+impl LibType {
+    // Add this method to the existing LibType impl
+    pub fn file_extension_android(&self) -> &str {
+        match self {
+            LibType::Static => "a",
+            LibType::Dynamic => "so",
+        }
+    }
+}

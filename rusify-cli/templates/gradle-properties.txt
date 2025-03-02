@@ -1,0 +1,5 @@
+android.library=true
+android.useAndroidX=true
+POM_NAME={{ lib_name }}
+POM_ARTIFACT_ID={{ lib_name }}
+POM_PACKAGING=aar
