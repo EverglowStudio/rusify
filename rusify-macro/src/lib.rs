@@ -1,7 +1,7 @@
 extern crate proc_macro;
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{parse_macro_input, ItemEnum, ItemStruct, ItemFn, ItemTrait};
+use syn::{parse_macro_input, ItemEnum, ItemFn, ItemStruct, ItemTrait};
 
 #[proc_macro_attribute]
 pub fn rusify_enum(_attr: TokenStream, item: TokenStream) -> TokenStream {
@@ -44,6 +44,28 @@ pub fn rusify_export(_attr: TokenStream, item: TokenStream) -> TokenStream {
         #[cfg_attr(feature = "uniffi", uniffi::export)]
         #[cfg_attr(feature = "wasm", wasm_bindgen::prelude::wasm_bindgen)]
         #[cfg_attr(feature = "ohos", napi_derive_ohos::napi)]
+        #input
+    };
+    TokenStream::from(expanded)
+}
+
+#[proc_macro_attribute]
+pub fn rusify_export_async_uniffi(_attr: TokenStream, item: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(item as ItemFn);
+    let expanded = quote! {
+        #[cfg(feature = "uniffi")]
+        #[uniffi::export(async_runtime = "tokio")]
+        #input
+    };
+    TokenStream::from(expanded)
+}
+
+#[proc_macro_attribute]
+pub fn rusify_export_async_ohos(_attr: TokenStream, item: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(item as ItemFn);
+    let expanded = quote! {
+        #[cfg(feature = "ohos")]
+        #[napi_derive_ohos::napi]
         #input
     };
     TokenStream::from(expanded)
